@@ -2,8 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Ahmed Sobhy | Senior Software Architect Portfolio',
-  description: 'Sobhy Digital Showcase - Modern software architecture and UI/UX design portfolio.',
+  title: 'Ahmed Sobhy | Senior Performance Media Buyer',
+  description: 'Scaling e-commerce revenue through data-driven performance marketing systems on Meta, Google, and TikTok.',
 };
 
 export default function RootLayout({

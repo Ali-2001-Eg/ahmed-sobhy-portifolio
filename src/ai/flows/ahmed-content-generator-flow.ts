@@ -1,42 +1,53 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating compelling content (project descriptions, taglines, or 'About Me' section)
- * for a portfolio based on keywords or prompts.
+ * @fileOverview A Genkit flow for generating performance marketing content (ad copies, strategy briefs, or taglines)
+ * for a media buyer portfolio.
  *
  * - generateAhmedContent - A function that handles content generation.
- * - AhmedContentGeneratorInput - The input type for the generateAhmedContent function.
- * - AhmedContentGeneratorOutput - The return type for the generateAhmedContent function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AhmedContentGeneratorInputSchema = z.object({
-  keywords: z.string().describe('Keywords or a brief prompt to guide content generation.'),
-  contentType: z.enum(['project_description', 'tagline', 'about_me_section']).describe('The type of content to generate (e.g., project description, tagline, about me section).'),
+  keywords: z.string().describe('Keywords, product features, or audience segments.'),
+  contentType: z.enum(['ad_copy', 'strategy_brief', 'tagline']).describe('The type of marketing content to generate.'),
 });
 export type AhmedContentGeneratorInput = z.infer<typeof AhmedContentGeneratorInputSchema>;
 
 const AhmedContentGeneratorOutputSchema = z.object({
-  generatedContent: z.string().describe('The AI-generated content.'),
+  generatedContent: z.string().describe('The AI-generated marketing content.'),
 });
 export type AhmedContentGeneratorOutput = z.infer<typeof AhmedContentGeneratorOutputSchema>;
 
-// --- Individual Prompt Definitions ---
-
-const projectDescriptionPrompt = ai.definePrompt({
-  name: 'projectDescriptionPrompt',
+const adCopyPrompt = ai.definePrompt({
+  name: 'adCopyPrompt',
   input: {
     schema: z.object({
       keywords: z.string(),
     }),
   },
   output: {
-    schema: z.string(), // The output is just the generated string
+    schema: z.string(),
   },
-  prompt: `Generate a compelling and concise project description for a professional portfolio. Focus on the key features, technologies used, and the impact or problem it solves. The description should be suitable for a professional audience, highlight Ahmed Sobhy's contribution, and be around 100-150 words.
+  prompt: `Generate a high-converting ad copy for Facebook/Instagram. Use a professional yet persuasive tone focused on e-commerce scaling and unit economics. Focus on the benefits of Ahmed Sobhy's media buying systems.
 
-Keywords/Prompt: {{{keywords}}}`,
+Product/Keywords: {{{keywords}}}`,
+});
+
+const strategyBriefPrompt = ai.definePrompt({
+  name: 'strategyBriefPrompt',
+  input: {
+    schema: z.object({
+      keywords: z.string(),
+    }),
+  },
+  output: {
+    schema: z.string(),
+  },
+  prompt: `Generate a concise performance marketing strategy brief for expanding into new markets (like UAE or Egypt). Include testing phases, audience segmentation ideas, and scaling milestones.
+
+Context: {{{keywords}}}`,
 });
 
 const taglinePrompt = ai.definePrompt({
@@ -47,26 +58,11 @@ const taglinePrompt = ai.definePrompt({
     }),
   },
   output: {
-    schema: z.string(), // The output is just the generated string
+    schema: z.string(),
   },
-  prompt: `Generate a catchy, professional, and concise tagline (1-2 sentences) for Ahmed Sobhy's portfolio or a specific project. It should highlight his expertise, a key benefit, or the project's core value.
+  prompt: `Generate a powerful 1-sentence tagline for Ahmed Sobhy's media buying services. It should emphasize results, precision, and scaling e-commerce engines.
 
-Keywords/Prompt: {{{keywords}}}`,
-});
-
-const aboutMeSectionPrompt = ai.definePrompt({
-  name: 'aboutMeSectionPrompt',
-  input: {
-    schema: z.object({
-      keywords: z.string(),
-    }),
-  },
-  output: {
-    schema: z.string(), // The output is just the generated string
-  },
-  prompt: `Generate an engaging 'About Me' section content for Ahmed Sobhy's professional portfolio. Focus on his professional background, career journey, key skills, and expertise. Maintain a professional and personable tone. The content should be around 150-250 words and reflect a developer named Ahmed Sobhy.
-
-Keywords/Prompt: {{{keywords}}}`,
+Keywords: {{{keywords}}}`,
 });
 
 
@@ -86,17 +82,17 @@ const ahmedContentGeneratorFlow = ai.defineFlow(
     let generatedText: string | undefined;
 
     switch (input.contentType) {
-      case 'project_description':
-        const projectDescResponse = await projectDescriptionPrompt({ keywords: input.keywords });
-        generatedText = projectDescResponse.output;
+      case 'ad_copy':
+        const adResponse = await adCopyPrompt({ keywords: input.keywords });
+        generatedText = adResponse.output;
+        break;
+      case 'strategy_brief':
+        const stratResponse = await strategyBriefPrompt({ keywords: input.keywords });
+        generatedText = stratResponse.output;
         break;
       case 'tagline':
         const taglineResponse = await taglinePrompt({ keywords: input.keywords });
         generatedText = taglineResponse.output;
-        break;
-      case 'about_me_section':
-        const aboutMeResponse = await aboutMeSectionPrompt({ keywords: input.keywords });
-        generatedText = aboutMeResponse.output;
         break;
       default:
         throw new Error(`Unsupported content type: ${input.contentType}`);
