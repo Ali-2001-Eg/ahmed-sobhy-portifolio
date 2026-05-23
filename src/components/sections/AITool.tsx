@@ -62,9 +62,7 @@ export function AITool() {
                 <label className="text-sm font-medium">Output Goal</label>
                 <Select value={contentType} onValueChange={setContentType}>
                   <SelectTrigger className="bg-background/50 border-white/10">
-                    <SelectTrigger className="bg-background/50 border-white/10">
                     <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ad_copy">FB/IG Ad Copy</SelectItem>
