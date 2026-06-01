@@ -17,7 +17,7 @@ This is a dynamic portfolio for a Senior Performance Media Buyer, built with Nex
    - Use these credentials to log in at `/login`.
 
 2. **Initialize Data:**
-   - Once logged into the `/dashboard`, click the **"Create Initial Profile & Data"** button to seed your professional info and sample case studies.
+   - Once logged into the `/dashboard`, click the **"Init Setup"** button to seed your professional info and sample case studies.
 
 3. **Manage Portfolio:**
    - **Leads:** View incoming consultation requests.

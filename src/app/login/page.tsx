@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Lock, ExternalLink, Info } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -29,7 +27,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Invalid email or password. Ensure you have created this user in the Firebase Console.');
+      setError('Invalid email or password. Please try again.');
       setLoading(false);
     }
   };
@@ -76,25 +74,6 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
-
-      <div className="max-w-md w-full">
-        <Alert className="bg-primary/5 border-primary/20">
-          <Info className="h-4 w-4" />
-          <AlertTitle>First time setting up?</AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p className="text-sm opacity-90">
-              To log in, you must first create an admin user in your Firebase Console.
-            </p>
-            <ol className="text-xs list-decimal pl-4 space-y-1 opacity-80">
-              <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" className="underline inline-flex items-center gap-1">Firebase Console <ExternalLink className="w-2 h-2" /></a></li>
-              <li>Select your project <b>studio-4950320879</b></li>
-              <li>Navigate to <b>Authentication</b> &gt; <b>Users</b></li>
-              <li>Click <b>Add user</b> and set your email/password</li>
-              <li>Use those credentials to log in above</li>
-            </ol>
-          </AlertDescription>
-        </Alert>
-      </div>
     </div>
   );
 }
