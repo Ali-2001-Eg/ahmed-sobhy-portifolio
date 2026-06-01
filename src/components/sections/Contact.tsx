@@ -1,14 +1,52 @@
+
+'use client';
+
+import { useState } from "react";
+import { useFirestore } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Linkedin, Calendar, TrendingUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Mail, Phone, MapPin, Linkedin, Calendar, TrendingUp, Loader2 } from "lucide-react";
 
 export function Contact() {
-  const socials = [
-    { icon: <Linkedin />, label: "LinkedIn", href: "https://linkedin.com" },
-    { icon: <TrendingUp />, label: "Growth Case Studies", href: "#" },
-  ];
+  const db = useFirestore();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    brand: '',
+    markets: '',
+    monthlySpend: '',
+    goals: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db) return;
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'leads'), {
+        ...form,
+        createdAt: serverTimestamp()
+      });
+      toast({
+        title: "Strategy Request Sent",
+        description: "Ahmed will review your brand details and reach out.",
+      });
+      setForm({ name: '', brand: '', markets: '', monthlySpend: '', goals: '' });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send request. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section id="contact" className="section-padding">
@@ -32,11 +70,12 @@ export function Contact() {
             <div className="space-y-4 pt-4">
               <h3 className="font-semibold">Professional Network</h3>
               <div className="flex gap-4">
-                {socials.map((s, i) => (
-                  <Button key={i} variant="outline" size="icon" className="rounded-full glass border-white/5 hover:border-primary/50 transition-colors" asChild>
-                    <a href={s.href} aria-label={s.label}>{s.icon}</a>
-                  </Button>
-                ))}
+                <Button variant="outline" size="icon" className="rounded-full glass border-white/5 hover:border-primary/50 transition-colors" asChild>
+                  <a href="https://linkedin.com" aria-label="LinkedIn"><Linkedin /></a>
+                </Button>
+                <Button variant="outline" size="icon" className="rounded-full glass border-white/5 hover:border-primary/50 transition-colors" asChild>
+                  <a href="#" aria-label="Growth"><TrendingUp /></a>
+                </Button>
               </div>
             </div>
           </div>
@@ -51,31 +90,61 @@ export function Contact() {
                 <p className="text-sm text-muted-foreground">Request a strategy audit or market expansion plan.</p>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
-                  <Input placeholder="John Smith" className="bg-background/50 border-white/10" />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Name</label>
+                    <Input 
+                      required
+                      value={form.name}
+                      onChange={e => setForm({...form, name: e.target.value})}
+                      placeholder="John Smith" 
+                      className="bg-background/50 border-white/10" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Brand/Company</label>
+                    <Input 
+                      required
+                      value={form.brand}
+                      onChange={e => setForm({...form, brand: e.target.value})}
+                      placeholder="E-comm Store Name" 
+                      className="bg-background/50 border-white/10" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Brand/Company</label>
-                  <Input placeholder="E-comm Store Name" className="bg-background/50 border-white/10" />
+                  <label className="text-sm font-medium text-muted-foreground">Target Markets</label>
+                  <Input 
+                    value={form.markets}
+                    onChange={e => setForm({...form, markets: e.target.value})}
+                    placeholder="e.g. UAE, Egypt, Saudi Arabia" 
+                    className="bg-background/50 border-white/10" 
+                  />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Target Markets</label>
-                <Input placeholder="e.g. UAE, Egypt, Saudi Arabia" className="bg-background/50 border-white/10" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Current Monthly Ad Spend</label>
-                <Input placeholder="$5,000 - $50,000" className="bg-background/50 border-white/10" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Growth Goals</label>
-                <Textarea placeholder="Tell me about your scaling targets..." className="bg-background/50 border-white/10 min-h-[120px]" />
-              </div>
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold">
-                Request Strategy Call
-              </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Current Monthly Ad Spend</label>
+                  <Input 
+                    required
+                    value={form.monthlySpend}
+                    onChange={e => setForm({...form, monthlySpend: e.target.value})}
+                    placeholder="$5,000 - $50,000" 
+                    className="bg-background/50 border-white/10" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Growth Goals</label>
+                  <Textarea 
+                    value={form.goals}
+                    onChange={e => setForm({...form, goals: e.target.value})}
+                    placeholder="Tell me about your scaling targets..." 
+                    className="bg-background/50 border-white/10 min-h-[120px]" 
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold" disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Request Strategy Call'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>

@@ -1,0 +1,67 @@
+
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "Professional profile information for Ahmed Sobhy",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "bio": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "operatingMarkets": { "type": "string" }
+      },
+      "required": ["name", "title", "bio"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A case study or performance marketing project",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "roas": { "type": "string" },
+        "cacReduction": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["title", "description"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Form submission from a potential client",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "markets": { "type": "string" },
+        "monthlySpend": { "type": "string" },
+        "goals": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "brand", "monthlySpend"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/profiles/main": {
+      "schema": "Profile",
+      "description": "Site-wide professional profile"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Collection of performance case studies"
+    },
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Client consultation requests"
+    }
+  }
+}

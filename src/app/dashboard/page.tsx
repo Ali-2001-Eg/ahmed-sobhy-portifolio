@@ -1,0 +1,225 @@
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth, useUser, useFirestore, useCollection, useDoc } from '@/firebase';
+import { doc, setDoc, updateDoc, collection, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+
+export default function DashboardPage() {
+  const { user, loading: userLoading } = useUser();
+  const auth = useAuth();
+  const db = useFirestore();
+  const router = useRouter();
+
+  const profileRef = db ? doc(db, 'profiles', 'main') : null;
+  const { data: profile, loading: profileLoading } = useDoc(profileRef);
+  
+  const projectsQuery = db ? collection(db, 'projects') : null;
+  const { data: projects, loading: projectsLoading } = useCollection(projectsQuery);
+
+  const leadsQuery = db ? collection(db, 'leads') : null;
+  const { data: leads, loading: leadsLoading } = useCollection(leadsQuery);
+
+  const [editingProfile, setEditingProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  useEffect(() => {
+    if (profile) setEditingProfile(profile);
+  }, [profile]);
+
+  if (userLoading || !user) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin" /></div>;
+
+  const handleSaveProfile = async () => {
+    if (!profileRef) return;
+    await setDoc(profileRef, editingProfile, { merge: true });
+  };
+
+  const handleAddProject = async () => {
+    if (!db) return;
+    await addDoc(collection(db, 'projects'), {
+      title: 'New Case Study',
+      description: 'Project description...',
+      tags: ['Meta Ads'],
+      roas: '0.0x',
+      cacReduction: '0%',
+      order: (projects?.length || 0) + 1
+    });
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (!db) return;
+    await deleteDoc(doc(db, 'projects', id));
+  };
+
+  const handleLogout = () => {
+    if (auth) signOut(auth);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-white/5 bg-card/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <LayoutDashboard className="text-primary w-6 h-6" />
+            <h1 className="font-bold text-xl tracking-tight">Sobhy Admin</h1>
+          </div>
+          <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
+            <LogOut className="w-4 h-4" /> Sign Out
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-6 space-y-8">
+        <Tabs defaultValue="leads" className="space-y-6">
+          <TabsList className="bg-card/50 p-1">
+            <TabsTrigger value="leads" className="gap-2"><Users className="w-4 h-4" /> Leads</TabsTrigger>
+            <TabsTrigger value="profile" className="gap-2"><UserCircle className="w-4 h-4" /> Profile</TabsTrigger>
+            <TabsTrigger value="projects" className="gap-2"><Briefcase className="w-4 h-4" /> Projects</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leads">
+            <Card className="glass border-white/5">
+              <CardHeader>
+                <CardTitle>Inbound Consultation Requests</CardTitle>
+                <CardDescription>Manage your prospective client pipeline</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Brand</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Spend</TableHead>
+                      <TableHead>Markets</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leads?.map((lead: any) => (
+                      <TableRow key={lead.id}>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {lead.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                        </TableCell>
+                        <TableCell className="font-bold">{lead.brand}</TableCell>
+                        <TableCell>{lead.name}</TableCell>
+                        <TableCell className="text-primary font-medium">{lead.monthlySpend}</TableCell>
+                        <TableCell className="text-sm">{lead.markets}</TableCell>
+                      </TableRow>
+                    ))}
+                    {(!leads || leads.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No leads received yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <Card className="glass border-white/5">
+              <CardHeader>
+                <CardTitle>Core Profile Info</CardTitle>
+                <CardDescription>This data updates the Hero and About sections</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {editingProfile && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Professional Name</label>
+                        <Input value={editingProfile.name} onChange={e => setEditingProfile({...editingProfile, name: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Title</label>
+                        <Input value={editingProfile.title} onChange={e => setEditingProfile({...editingProfile, title: e.target.value})} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Professional Bio</label>
+                      <Textarea className="min-h-[120px]" value={editingProfile.bio} onChange={e => setEditingProfile({...editingProfile, bio: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">WhatsApp</label>
+                        <Input value={editingProfile.whatsapp} onChange={e => setEditingProfile({...editingProfile, whatsapp: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Email</label>
+                        <Input value={editingProfile.email} onChange={e => setEditingProfile({...editingProfile, email: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Markets (comma separated)</label>
+                        <Input value={editingProfile.operatingMarkets} onChange={e => setEditingProfile({...editingProfile, operatingMarkets: e.target.value})} />
+                      </div>
+                    </div>
+                    <Button onClick={handleSaveProfile} className="w-full gap-2">
+                      <Save className="w-4 h-4" /> Save Profile Changes
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="projects">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Case Studies</h2>
+                <Button onClick={handleAddProject} className="gap-2"><Plus className="w-4 h-4" /> Add Project</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {projects?.map((p: any) => (
+                  <Card key={p.id} className="glass border-white/5">
+                    <CardContent className="p-6 space-y-4">
+                      <Input 
+                        value={p.title} 
+                        onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { title: e.target.value })} 
+                        className="font-bold text-lg" 
+                      />
+                      <Textarea 
+                        value={p.description} 
+                        onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { description: e.target.value })} 
+                        className="text-sm min-h-[80px]"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase text-muted-foreground">ROAS</label>
+                          <Input value={p.roas} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { roas: e.target.value })} />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase text-muted-foreground">CAC Reduction</label>
+                          <Input value={p.cacReduction} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { cacReduction: e.target.value })} />
+                        </div>
+                      </div>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(p.id)} className="w-full gap-2">
+                        <Trash2 className="w-4 h-4" /> Remove Case Study
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}

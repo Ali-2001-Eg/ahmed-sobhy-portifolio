@@ -1,8 +1,11 @@
+
+'use client';
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart3, Target, TrendingUp, Globe, ShoppingBag, LayoutDashboard } from "lucide-react";
 
-export function About() {
+export function About({ profile }: { profile: any }) {
   const skills = [
     { icon: <Target className="w-6 h-6" />, title: "Meta Ads", desc: "Scaling Facebook & IG ads via advanced CBO/ABO strategies." },
     { icon: <TrendingUp className="w-6 h-6" />, title: "Unit Economics", desc: "Optimizing for MER, ROAS, and sustainable LTV/CAC ratios." },
@@ -12,6 +15,8 @@ export function About() {
     { icon: <LayoutDashboard className="w-6 h-6" />, title: "Media Planning", desc: "Capital deployment across Google, TikTok, and Snap." },
   ];
 
+  const markets = profile?.operatingMarkets?.split(',') || ["Egypt", "UAE", "GCC"];
+
   return (
     <section id="about" className="section-padding bg-card/30">
       <div className="max-w-7xl mx-auto">
@@ -19,7 +24,7 @@ export function About() {
           <div className="lg:w-1/2 space-y-6">
             <h2 className="text-4xl font-bold">Performance Expertise</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              I specialize in expanding businesses into markets that matter. Egypt. UAE. 
+              I specialize in expanding businesses into markets that matter. {markets.slice(0, 3).join('. ')}. 
               With focus on real spend and real outcomes, I manage high-budget campaigns 
               that don&apos;t just run—they scale.
             </p>

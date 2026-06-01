@@ -1,13 +1,18 @@
+
 "use client";
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Github, Linkedin, Mail, Calendar } from "lucide-react";
+import { ArrowRight, Linkedin, Mail, Calendar } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
 
-export function Hero() {
+export function Hero({ profile }: { profile: any }) {
   const headshot = PlaceHolderImages.find((img) => img.id === "hero-headshot");
+
+  const name = profile?.name || "Ahmed Sobhy";
+  const title = profile?.title || "Senior Media Buyer";
+  const bio = profile?.bio || "I build and operate performance marketing systems that scale e-commerce revenue — not campaigns that run, but engines that compound.";
 
   return (
     <section id="home" className="relative hero-gradient pt-32 pb-20 px-6 md:px-12 lg:px-24 overflow-hidden">
@@ -17,13 +22,11 @@ export function Hero() {
             Deploying Capital with Precision
           </div>
           <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-            I&apos;m <span className="text-primary">Ahmed Sobhy</span>, 
-            <br /> Media Buyer Senior.
+            I&apos;m <span className="text-primary">{name}</span>, 
+            <br /> {title}.
           </h1>
           <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-            I build and operate performance marketing systems that scale e-commerce revenue — 
-            not campaigns that run, but <span className="text-foreground font-semibold">engines that compound</span>. 
-            Across Meta, Google, and TikTok, I optimize for sustainable unit economics.
+            {bio}
           </p>
           <div className="flex flex-wrap gap-4">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-white gap-2" asChild>
@@ -34,15 +37,15 @@ export function Hero() {
             </Button>
           </div>
           <div className="flex items-center gap-6 pt-4">
-            <LinkIcon icon={<Linkedin />} href="https://linkedin.com" label="LinkedIn" />
-            <LinkIcon icon={<Mail />} href="mailto:ahmed@example.com" label="Email" />
+            <LinkIcon icon={<Linkedin />} href={profile?.linkedin || "#"} label="LinkedIn" />
+            <LinkIcon icon={<Mail />} href={`mailto:${profile?.email || "ahmed@example.com"}`} label="Email" />
           </div>
         </div>
         <div className="flex-1 relative animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="relative z-10 w-full aspect-square max-w-[500px] rounded-3xl overflow-hidden border-4 border-white/5 shadow-2xl">
             <Image
               src={headshot?.imageUrl || ""}
-              alt="Ahmed Sobhy - Senior Media Buyer"
+              alt={`${name} - ${title}`}
               width={600}
               height={600}
               className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
