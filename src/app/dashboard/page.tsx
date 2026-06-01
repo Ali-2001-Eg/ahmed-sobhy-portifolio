@@ -11,14 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle, Database } from 'lucide-react';
 import { signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
 
   const profileRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -39,6 +41,7 @@ export default function DashboardPage() {
   const { data: leads, loading: leadsLoading } = useCollection(leadsQuery);
 
   const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [initializing, setInitializing] = useState(false);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -52,9 +55,56 @@ export default function DashboardPage() {
 
   if (userLoading || !user) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
 
+  const handleSeedData = async () => {
+    if (!db || !profileRef) return;
+    setInitializing(true);
+    try {
+      // Create initial profile
+      await setDoc(profileRef, {
+        name: 'Ahmed Sobhy',
+        title: 'Senior Performance Media Buyer',
+        bio: 'I build and operate performance marketing systems that scale e-commerce revenue — not campaigns that run, but engines that compound.',
+        email: 'ahmed@marketing.com',
+        whatsapp: '+20123456789',
+        operatingMarkets: 'Egypt, UAE, Saudi Arabia, GCC',
+        linkedin: 'https://linkedin.com'
+      });
+
+      // Create a sample project if none exist
+      if (!projects || projects.length === 0) {
+        await addDoc(collection(db, 'projects'), {
+          title: 'UAE Market Expansion',
+          description: 'Scaled a direct-to-consumer brand into the UAE market with focus on high-LTV customers and unit economic efficiency.',
+          tags: ['Meta Ads', 'CBO Scaling'],
+          roas: '4.5x',
+          cacReduction: '22%',
+          order: 1,
+          imageUrl: 'https://picsum.photos/seed/setup1/800/600'
+        });
+      }
+
+      toast({
+        title: "Database Initialized",
+        description: "Your profile and initial case study have been created.",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Initialization Failed",
+        description: "Check your Firestore security rules or internet connection.",
+      });
+    } finally {
+      setInitializing(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!profileRef) return;
     setDoc(profileRef, editingProfile, { merge: true })
+      .then(() => {
+        toast({ title: "Profile Saved", description: "Your public profile has been updated." });
+      })
       .catch((err) => {
         console.error("Error saving profile", err);
       });
@@ -69,7 +119,7 @@ export default function DashboardPage() {
       roas: '0.0x',
       cacReduction: '0%',
       order: (projects?.length || 0) + 1,
-      imageUrl: 'https://picsum.photos/seed/' + Math.random() + '/800/600'
+      imageUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 1000) + '/800/600'
     });
   };
 
@@ -90,13 +140,39 @@ export default function DashboardPage() {
             <LayoutDashboard className="text-primary w-6 h-6" />
             <h1 className="font-bold text-xl tracking-tight">Sobhy Admin</h1>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
-            <LogOut className="w-4 h-4" /> Sign Out
-          </Button>
+          <div className="flex items-center gap-4">
+            {!profile && (
+              <Button variant="secondary" size="sm" onClick={handleSeedData} disabled={initializing} className="gap-2">
+                {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                Init Setup
+              </Button>
+            )}
+            <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
+              <LogOut className="w-4 h-4" /> Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
+        {!profile && !profileLoading && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="text-primary" /> Get Started
+              </CardTitle>
+              <CardDescription>
+                Your database is empty. Click the button below to seed your initial profile and sample data.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleSeedData} disabled={initializing} className="w-full md:w-auto">
+                {initializing ? "Initializing..." : "Create Initial Profile & Data"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="leads" className="space-y-6">
           <TabsList className="bg-card/50 p-1 border border-white/5">
             <TabsTrigger value="leads" className="gap-2"><Users className="w-4 h-4" /> Leads</TabsTrigger>
@@ -188,7 +264,7 @@ export default function DashboardPage() {
                     </Button>
                   </>
                 )}
-                {!editingProfile && !profileLoading && <p className="text-center text-muted-foreground">No profile data found.</p>}
+                {!editingProfile && !profileLoading && <p className="text-center text-muted-foreground">Click "Init Setup" above to start.</p>}
               </CardContent>
             </Card>
           </TabsContent>

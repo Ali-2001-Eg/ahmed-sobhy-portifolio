@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, Lock } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, Lock, ExternalLink, Info } from 'lucide-react';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -28,13 +29,13 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Invalid email or password.');
+      setError('Invalid email or password. Ensure you have created this user in the Firebase Console.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background space-y-6">
       <Card className="w-full max-w-md glass border-primary/20">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-2">
@@ -50,7 +51,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="ahmed@marketing.com"
+                placeholder="admin@marketing.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -75,6 +76,25 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className="max-w-md w-full">
+        <Alert className="bg-primary/5 border-primary/20">
+          <Info className="h-4 w-4" />
+          <AlertTitle>First time setting up?</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="text-sm opacity-90">
+              To log in, you must first create an admin user in your Firebase Console.
+            </p>
+            <ol className="text-xs list-decimal pl-4 space-y-1 opacity-80">
+              <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" className="underline inline-flex items-center gap-1">Firebase Console <ExternalLink className="w-2 h-2" /></a></li>
+              <li>Select your project <b>studio-4950320879</b></li>
+              <li>Navigate to <b>Authentication</b> &gt; <b>Users</b></li>
+              <li>Click <b>Add user</b> and set your email/password</li>
+              <li>Use those credentials to log in above</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
+      </div>
     </div>
   );
 }
