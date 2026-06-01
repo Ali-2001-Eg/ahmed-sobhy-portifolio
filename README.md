@@ -4,15 +4,16 @@ This is a dynamic portfolio for a Senior Performance Media Buyer, built with Nex
 
 ## Firebase Project Details
 
-- **Project ID:** `studio-4950320879`
-- **Firebase Console:** [https://console.firebase.google.com/project/studio-4950320879](https://console.firebase.google.com/project/studio-4950320879)
+- **Project ID:** `studio-6084148158-974fb`
+- **Firebase Console:** [https://console.firebase.google.com/project/studio-6084148158-974fb](https://console.firebase.google.com/project/studio-6084148158-974fb)
 
 ## Getting Started
 
 1. **Setup Admin Access:**
-   - Go to the Firebase Console link above.
-   - Navigate to **Authentication** -> **Users**.
-   - Click **Add User** and create an account with your email and password.
+   - Go to the [Firebase Console](https://console.firebase.google.com/project/studio-6084148158-974fb).
+   - Navigate to **Authentication** -> **Sign-in method**.
+   - Enable **Email/Password**.
+   - Navigate to **Users** and click **Add User** (e.g., `admin@gmail.com`).
    - Use these credentials to log in at `/login`.
 
 2. **Initialize Data:**
