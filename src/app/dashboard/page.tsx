@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -50,16 +49,23 @@ export default function DashboardPage() {
   }, [user, userLoading, router]);
 
   useEffect(() => {
-    if (profile) setEditingProfile(profile);
+    if (profile) {
+      setEditingProfile(profile);
+    }
   }, [profile]);
 
-  if (userLoading || !user) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
+  if (userLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="animate-spin text-primary w-8 h-8" />
+      </div>
+    );
+  }
 
   const handleSeedData = async () => {
     if (!db || !profileRef) return;
     setInitializing(true);
     try {
-      // Create initial profile
       await setDoc(profileRef, {
         name: 'Ahmed Sobhy',
         title: 'Senior Performance Media Buyer',
@@ -70,7 +76,6 @@ export default function DashboardPage() {
         linkedin: 'https://linkedin.com'
       });
 
-      // Create a sample project if none exist
       if (!projects || projects.length === 0) {
         await addDoc(collection(db, 'projects'), {
           title: 'UAE Market Expansion',
@@ -100,7 +105,7 @@ export default function DashboardPage() {
   };
 
   const handleSaveProfile = async () => {
-    if (!profileRef) return;
+    if (!profileRef || !editingProfile) return;
     setDoc(profileRef, editingProfile, { merge: true })
       .then(() => {
         toast({ title: "Profile Saved", description: "Your public profile has been updated." });
@@ -141,7 +146,7 @@ export default function DashboardPage() {
             <h1 className="font-bold text-xl tracking-tight">Sobhy Admin</h1>
           </div>
           <div className="flex items-center gap-4">
-            {!profile && (
+            {!profile && !profileLoading && (
               <Button variant="secondary" size="sm" onClick={handleSeedData} disabled={initializing} className="gap-2">
                 {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
                 Init Setup
@@ -203,10 +208,10 @@ export default function DashboardPage() {
                         <TableCell className="text-xs text-muted-foreground">
                           {lead.createdAt?.toDate ? lead.createdAt.toDate().toLocaleDateString() : 'Recent'}
                         </TableCell>
-                        <TableCell className="font-bold">{lead.brand}</TableCell>
-                        <TableCell>{lead.name}</TableCell>
-                        <TableCell className="text-primary font-medium">{lead.monthlySpend}</TableCell>
-                        <TableCell className="text-sm">{lead.markets}</TableCell>
+                        <TableCell className="font-bold">{lead.brand || 'Unknown Brand'}</TableCell>
+                        <TableCell>{lead.name || 'Anonymous'}</TableCell>
+                        <TableCell className="text-primary font-medium">{lead.monthlySpend || 'N/A'}</TableCell>
+                        <TableCell className="text-sm">{lead.markets || 'Not specified'}</TableCell>
                       </TableRow>
                     ))}
                     {(!leads || leads.length === 0) && (
@@ -229,7 +234,7 @@ export default function DashboardPage() {
                 <CardDescription>Update your Professional Name, Bio, and Contact info</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {editingProfile && (
+                {editingProfile ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -263,8 +268,11 @@ export default function DashboardPage() {
                       <Save className="w-4 h-4" /> Save Profile Changes
                     </Button>
                   </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {profileLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Click "Init Setup" above to start.'}
+                  </div>
                 )}
-                {!editingProfile && !profileLoading && <p className="text-center text-muted-foreground">Click "Init Setup" above to start.</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -280,13 +288,13 @@ export default function DashboardPage() {
                   <Card key={p.id} className="glass border-white/5 shadow-xl">
                     <CardContent className="p-6 space-y-4">
                       <Input 
-                        value={p.title} 
+                        value={p.title || ''} 
                         placeholder="Project Title"
                         onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { title: e.target.value })} 
                         className="font-bold text-lg" 
                       />
                       <Textarea 
-                        value={p.description} 
+                        value={p.description || ''} 
                         placeholder="Describe the strategy and outcome..."
                         onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { description: e.target.value })} 
                         className="text-sm min-h-[80px]"
@@ -294,11 +302,11 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase text-muted-foreground">ROAS</label>
-                          <Input value={p.roas} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { roas: e.target.value })} />
+                          <Input value={p.roas || ''} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { roas: e.target.value })} />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase text-muted-foreground">CAC Reduction</label>
-                          <Input value={p.cacReduction} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { cacReduction: e.target.value })} />
+                          <Input value={p.cacReduction || ''} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { cacReduction: e.target.value })} />
                         </div>
                       </div>
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(p.id)} className="w-full gap-2">
@@ -307,6 +315,9 @@ export default function DashboardPage() {
                     </CardContent>
                   </Card>
                 ))}
+                {(!projects || projects.length === 0) && !projectsLoading && (
+                   <p className="text-muted-foreground text-center col-span-2 py-12 border border-dashed rounded-lg">No projects added yet.</p>
+                )}
               </div>
             </div>
           </TabsContent>

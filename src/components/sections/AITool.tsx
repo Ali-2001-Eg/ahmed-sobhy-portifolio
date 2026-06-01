@@ -16,11 +16,12 @@ export function AITool() {
   const [copied, setCopied] = useState(false);
 
   const handleGenerate = async () => {
-    if (!keywords.trim()) return;
+    const trimmedKeywords = keywords.trim();
+    if (!trimmedKeywords) return;
     setLoading(true);
     try {
       const { generatedContent } = await generateAhmedContent({
-        keywords,
+        keywords: trimmedKeywords,
         contentType,
       });
       setResult(generatedContent);
@@ -32,6 +33,7 @@ export function AITool() {
   };
 
   const copyToClipboard = () => {
+    if (!result) return;
     navigator.clipboard.writeText(result);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -46,8 +48,7 @@ export function AITool() {
           </div>
           <h2 className="text-4xl font-bold">AI Performance Assistant</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Ahmed, use this tool to draft high-converting ad copy or strategy briefs 
-            for your next expansion plan or test campaign.
+            Draft high-converting ad copy or strategy briefs for your next expansion plan or test campaign.
           </p>
         </div>
 
@@ -85,7 +86,7 @@ export function AITool() {
             <Button 
               className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold gap-2"
               onClick={handleGenerate}
-              disabled={loading || !keywords}
+              disabled={loading || !keywords.trim()}
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
               Generate Conversion-Focused Content
