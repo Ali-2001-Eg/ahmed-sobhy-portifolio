@@ -1,6 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Corrected rules for Ahmed Sobhy Portfolio
+    
     // Profiles: Publicly readable, admin writable
     match /profiles/{profileId} {
       allow read: if true;

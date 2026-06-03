@@ -35,10 +35,11 @@ export default function DashboardPage() {
   }, [db]);
   const { data: projects, loading: projectsLoading } = useCollection(projectsQuery);
 
+  // Stabilize leads query to only fetch if user is authenticated
   const leadsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
-  }, [db]);
+  }, [db, user]);
   const { data: leads, loading: leadsLoading } = useCollection(leadsQuery);
 
   const [editingProfile, setEditingProfile] = useState<any>(null);
@@ -56,7 +57,7 @@ export default function DashboardPage() {
     }
   }, [profile]);
 
-  if (userLoading || !user) {
+  if (userLoading || (!user && !userLoading)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="animate-spin text-primary w-8 h-8" />
