@@ -8,7 +8,6 @@ export function Navbar() {
     { label: "Home", href: "#home" },
     { label: "Expertise", href: "#about" },
     { label: "Case Studies", href: "#projects" },
-    { label: "AI Ad Tool", href: "#ai-tool" },
     { label: "Consultation", href: "#contact" },
   ];
 

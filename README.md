@@ -29,4 +29,3 @@ This is a dynamic portfolio for a Senior Performance Media Buyer, built with Nex
 - **Framework:** Next.js 15 (App Router)
 - **Styling:** Tailwind CSS + ShadCN UI
 - **Backend:** Firebase (Firestore & Auth)
-- **AI:** Genkit for marketing copy generation

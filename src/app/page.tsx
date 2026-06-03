@@ -5,7 +5,6 @@ import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Projects } from "@/components/sections/Projects";
 import { Contact } from "@/components/sections/Contact";
-import { AITool } from "@/components/sections/AITool";
 import { Footer } from "@/components/Footer";
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, orderBy } from "firebase/firestore";
@@ -45,7 +44,6 @@ export default function Home() {
       <Hero profile={profile} />
       <About profile={profile} />
       <Projects projects={projects || []} />
-      <AITool />
       <Contact />
       <Footer />
     </main>
