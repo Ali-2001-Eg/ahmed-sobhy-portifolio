@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle, Database } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -62,62 +65,74 @@ export default function DashboardPage() {
     );
   }
 
-  const handleSeedData = async () => {
+  const handleSeedData = () => {
     if (!db || !profileRef) return;
     setInitializing(true);
-    try {
-      await setDoc(profileRef, {
-        name: 'Ahmed Sobhy',
-        title: 'Senior Performance Media Buyer',
-        bio: 'I build and operate performance marketing systems that scale e-commerce revenue — not campaigns that run, but engines that compound.',
-        email: 'ahmed@marketing.com',
-        whatsapp: '+20123456789',
-        operatingMarkets: 'Egypt, UAE, Saudi Arabia, GCC',
-        linkedin: 'https://linkedin.com'
-      });
+    
+    const profileData = {
+      name: 'Ahmed Sobhy',
+      title: 'Senior Performance Media Buyer',
+      bio: 'I build and operate performance marketing systems that scale e-commerce revenue — not campaigns that run, but engines that compound.',
+      email: 'ahmed@marketing.com',
+      whatsapp: '+20123456789',
+      operatingMarkets: 'Egypt, UAE, Saudi Arabia, GCC',
+      linkedin: 'https://linkedin.com'
+    };
 
-      if (!projects || projects.length === 0) {
-        await addDoc(collection(db, 'projects'), {
-          title: 'UAE Market Expansion',
-          description: 'Scaled a direct-to-consumer brand into the UAE market with focus on high-LTV customers and unit economic efficiency.',
-          tags: ['Meta Ads', 'CBO Scaling'],
-          roas: '4.5x',
-          cacReduction: '22%',
-          order: 1,
-          imageUrl: 'https://picsum.photos/seed/setup1/800/600'
+    setDoc(profileRef, profileData)
+      .then(() => {
+        if (!projects || projects.length === 0) {
+          const projectData = {
+            title: 'UAE Market Expansion',
+            description: 'Scaled a direct-to-consumer brand into the UAE market with focus on high-LTV customers and unit economic efficiency.',
+            tags: ['Meta Ads', 'CBO Scaling'],
+            roas: '4.5x',
+            cacReduction: '22%',
+            order: 1,
+            imageUrl: 'https://picsum.photos/seed/setup1/800/600'
+          };
+          addDoc(collection(db, 'projects'), projectData).catch(async (err) => {
+            const permissionError = new FirestorePermissionError({
+              path: 'projects',
+              operation: 'create',
+              requestResourceData: projectData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          });
+        }
+        toast({ title: "Database Initialized", description: "Your profile and initial data have been created." });
+        setInitializing(false);
+      })
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: profileRef.path,
+          operation: 'write',
+          requestResourceData: profileData,
         });
-      }
-
-      toast({
-        title: "Database Initialized",
-        description: "Your profile and initial case study have been created.",
+        errorEmitter.emit('permission-error', permissionError);
+        setInitializing(false);
       });
-    } catch (err) {
-      console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Initialization Failed",
-        description: "Check your Firestore security rules or internet connection.",
-      });
-    } finally {
-      setInitializing(false);
-    }
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = () => {
     if (!profileRef || !editingProfile) return;
     setDoc(profileRef, editingProfile, { merge: true })
       .then(() => {
         toast({ title: "Profile Saved", description: "Your public profile has been updated." });
       })
-      .catch((err) => {
-        console.error("Error saving profile", err);
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: profileRef.path,
+          operation: 'write',
+          requestResourceData: editingProfile,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
   };
 
-  const handleAddProject = async () => {
+  const handleAddProject = () => {
     if (!db) return;
-    addDoc(collection(db, 'projects'), {
+    const projectData = {
       title: 'New Case Study',
       description: 'Project description...',
       tags: ['Meta Ads'],
@@ -125,13 +140,44 @@ export default function DashboardPage() {
       cacReduction: '0%',
       order: (projects?.length || 0) + 1,
       imageUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 1000) + '/800/600'
-    });
+    };
+    addDoc(collection(db, 'projects'), projectData)
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'projects',
+          operation: 'create',
+          requestResourceData: projectData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
-  const handleDeleteProject = async (id: string) => {
+  const handleDeleteProject = (id: string) => {
     if (!db) return;
-    deleteDoc(doc(db, 'projects', id));
+    const projectRef = doc(db, 'projects', id);
+    deleteDoc(projectRef)
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: projectRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
+
+  const handleUpdateProjectField = (id: string, data: any) => {
+    if (!db) return;
+    const projectRef = doc(db, 'projects', id);
+    updateDoc(projectRef, data)
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: projectRef.path,
+          operation: 'update',
+          requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  }
 
   const handleLogout = () => {
     if (auth) signOut(auth).then(() => router.push('/login'));
@@ -290,23 +336,23 @@ export default function DashboardPage() {
                       <Input 
                         value={p.title || ''} 
                         placeholder="Project Title"
-                        onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { title: e.target.value })} 
+                        onChange={(e) => handleUpdateProjectField(p.id, { title: e.target.value })} 
                         className="font-bold text-lg" 
                       />
                       <Textarea 
                         value={p.description || ''} 
                         placeholder="Describe the strategy and outcome..."
-                        onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { description: e.target.value })} 
+                        onChange={(e) => handleUpdateProjectField(p.id, { description: e.target.value })} 
                         className="text-sm min-h-[80px]"
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase text-muted-foreground">ROAS</label>
-                          <Input value={p.roas || ''} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { roas: e.target.value })} />
+                          <Input value={p.roas || ''} onChange={(e) => handleUpdateProjectField(p.id, { roas: e.target.value })} />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase text-muted-foreground">CAC Reduction</label>
-                          <Input value={p.cacReduction || ''} onChange={(e) => updateDoc(doc(db!, 'projects', p.id), { cacReduction: e.target.value })} />
+                          <Input value={p.cacReduction || ''} onChange={(e) => handleUpdateProjectField(p.id, { cacReduction: e.target.value })} />
                         </div>
                       </div>
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(p.id)} className="w-full gap-2">

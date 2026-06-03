@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Linkedin, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export function Contact() {
   const db = useFirestore();
@@ -23,29 +25,35 @@ export function Contact() {
     goals: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
+    
     setLoading(true);
-    try {
-      await addDoc(collection(db, 'leads'), {
-        ...form,
-        createdAt: serverTimestamp()
+    const leadsCollection = collection(db, 'leads');
+    const leadData = {
+      ...form,
+      createdAt: serverTimestamp()
+    };
+
+    // Initiate write without await for optimistic UI
+    addDoc(leadsCollection, leadData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: leadsCollection.path,
+          operation: 'create',
+          requestResourceData: leadData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
-      toast({
-        title: "Strategy Request Sent",
-        description: "Ahmed will review your brand details and reach out.",
-      });
-      setForm({ name: '', brand: '', markets: '', monthlySpend: '', goals: '' });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send request. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
+
+    // Proceed immediately with UX feedback
+    toast({
+      title: "Strategy Request Sent",
+      description: "Ahmed will review your brand details and reach out.",
+    });
+    setForm({ name: '', brand: '', markets: '', monthlySpend: '', goals: '' });
+    setLoading(false);
   };
 
   return (
