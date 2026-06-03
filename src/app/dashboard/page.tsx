@@ -1,17 +1,16 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, updateDoc, collection, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, addDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle, Database } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, LogOut, LayoutDashboard, Briefcase, Users, UserCircle, Database, ExternalLink } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -32,13 +31,13 @@ export default function DashboardPage() {
   
   const projectsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, 'projects');
+    return query(collection(db, 'projects'), orderBy('order', 'asc'));
   }, [db]);
   const { data: projects, loading: projectsLoading } = useCollection(projectsQuery);
 
   const leadsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, 'leads');
+    return query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
   }, [db]);
   const { data: leads, loading: leadsLoading } = useCollection(leadsQuery);
 
@@ -80,29 +79,6 @@ export default function DashboardPage() {
     };
 
     setDoc(profileRef, profileData)
-      .then(() => {
-        if (!projects || projects.length === 0) {
-          const projectData = {
-            title: 'UAE Market Expansion',
-            description: 'Scaled a direct-to-consumer brand into the UAE market with focus on high-LTV customers and unit economic efficiency.',
-            tags: ['Meta Ads', 'CBO Scaling'],
-            roas: '4.5x',
-            cacReduction: '22%',
-            order: 1,
-            imageUrl: 'https://picsum.photos/seed/setup1/800/600'
-          };
-          addDoc(collection(db, 'projects'), projectData).catch(async (err) => {
-            const permissionError = new FirestorePermissionError({
-              path: 'projects',
-              operation: 'create',
-              requestResourceData: projectData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-          });
-        }
-        toast({ title: "Database Initialized", description: "Your profile and initial data have been created." });
-        setInitializing(false);
-      })
       .catch(async (err) => {
         const permissionError = new FirestorePermissionError({
           path: profileRef.path,
@@ -110,16 +86,34 @@ export default function DashboardPage() {
           requestResourceData: profileData,
         });
         errorEmitter.emit('permission-error', permissionError);
-        setInitializing(false);
       });
+
+    const projectData = {
+      title: 'UAE Market Expansion',
+      description: 'Scaled a direct-to-consumer brand into the UAE market with focus on high-LTV customers and unit economic efficiency.',
+      tags: ['Meta Ads', 'CBO Scaling'],
+      roas: '4.5x',
+      cacReduction: '22%',
+      order: 1,
+      imageUrl: 'https://picsum.photos/seed/setup1/800/600'
+    };
+    
+    addDoc(collection(db, 'projects'), projectData).catch(async (err) => {
+      const permissionError = new FirestorePermissionError({
+        path: 'projects',
+        operation: 'create',
+        requestResourceData: projectData,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+
+    toast({ title: "Setup Initiated", description: "Your profile and initial data are being created." });
+    setInitializing(false);
   };
 
   const handleSaveProfile = () => {
     if (!profileRef || !editingProfile) return;
     setDoc(profileRef, editingProfile, { merge: true })
-      .then(() => {
-        toast({ title: "Profile Saved", description: "Your public profile has been updated." });
-      })
       .catch(async (err) => {
         const permissionError = new FirestorePermissionError({
           path: profileRef.path,
@@ -128,6 +122,7 @@ export default function DashboardPage() {
         });
         errorEmitter.emit('permission-error', permissionError);
       });
+    toast({ title: "Saving Profile", description: "Updates are being synced to the live website." });
   };
 
   const handleAddProject = () => {
@@ -179,6 +174,19 @@ export default function DashboardPage() {
       });
   }
 
+  const handleDeleteLead = (id: string) => {
+    if (!db) return;
+    const leadRef = doc(db, 'leads', id);
+    deleteDoc(leadRef)
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: leadRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  };
+
   const handleLogout = () => {
     if (auth) signOut(auth).then(() => router.push('/login'));
   };
@@ -192,13 +200,16 @@ export default function DashboardPage() {
             <h1 className="font-bold text-xl tracking-tight">Sobhy Admin</h1>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden md:flex">
+              <a href="/" target="_blank"><ExternalLink className="w-4 h-4" /> View Site</a>
+            </Button>
             {!profile && !profileLoading && (
               <Button variant="secondary" size="sm" onClick={handleSeedData} disabled={initializing} className="gap-2">
                 {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
                 Init Setup
               </Button>
             )}
-            <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-destructive">
               <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </div>
@@ -207,20 +218,15 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
         {!profile && !profileLoading && (
-          <Card className="border-primary/50 bg-primary/5">
+          <Card className="border-primary/50 bg-primary/5 animate-pulse">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="text-primary" /> Get Started
+                <Database className="text-primary" /> Setup Required
               </CardTitle>
               <CardDescription>
-                Your database is empty. Click the button below to seed your initial profile and sample data.
+                Click "Init Setup" in the header to create your default profile and start managing your portfolio.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={handleSeedData} disabled={initializing} className="w-full md:w-auto">
-                {initializing ? "Initializing..." : "Create Initial Profile & Data"}
-              </Button>
-            </CardContent>
           </Card>
         )}
 
@@ -235,7 +241,7 @@ export default function DashboardPage() {
             <Card className="glass border-white/5 shadow-xl">
               <CardHeader>
                 <CardTitle>Inbound Consultation Requests</CardTitle>
-                <CardDescription>Manage your prospective client pipeline</CardDescription>
+                <CardDescription>Manage your prospective client pipeline. Latest requests appear first.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -246,24 +252,35 @@ export default function DashboardPage() {
                       <TableHead>Contact</TableHead>
                       <TableHead>Spend</TableHead>
                       <TableHead>Markets</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {leads?.map((lead: any) => (
-                      <TableRow key={lead.id}>
+                      <TableRow key={lead.id} className="group">
                         <TableCell className="text-xs text-muted-foreground">
-                          {lead.createdAt?.toDate ? lead.createdAt.toDate().toLocaleDateString() : 'Recent'}
+                          {lead.createdAt?.toDate ? lead.createdAt.toDate().toLocaleDateString() : 'Just now'}
                         </TableCell>
                         <TableCell className="font-bold">{lead.brand || 'Unknown Brand'}</TableCell>
                         <TableCell>{lead.name || 'Anonymous'}</TableCell>
                         <TableCell className="text-primary font-medium">{lead.monthlySpend || 'N/A'}</TableCell>
                         <TableCell className="text-sm">{lead.markets || 'Not specified'}</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                            onClick={() => handleDeleteLead(lead.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                     {(!leads || leads.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          No leads received yet.
+                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
+                          {leadsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : "No consultation requests yet."}
                         </TableCell>
                       </TableRow>
                     )}
@@ -276,15 +293,15 @@ export default function DashboardPage() {
           <TabsContent value="profile">
             <Card className="glass border-white/5 shadow-xl">
               <CardHeader>
-                <CardTitle>Core Profile Info</CardTitle>
-                <CardDescription>Update your Professional Name, Bio, and Contact info</CardDescription>
+                <CardTitle>Professional Identity</CardTitle>
+                <CardDescription>Changes here update your Hero section and Expertise area immediately.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {editingProfile ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Professional Name</label>
+                        <label className="text-sm font-medium">Full Name</label>
                         <Input value={editingProfile.name || ''} onChange={e => setEditingProfile({...editingProfile, name: e.target.value})} />
                       </div>
                       <div className="space-y-2">
@@ -293,30 +310,30 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Professional Bio</label>
+                      <label className="text-sm font-medium">Hero Bio</label>
                       <Textarea className="min-h-[120px]" value={editingProfile.bio || ''} onChange={e => setEditingProfile({...editingProfile, bio: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">WhatsApp</label>
+                        <label className="text-sm font-medium">WhatsApp Contact</label>
                         <Input value={editingProfile.whatsapp || ''} onChange={e => setEditingProfile({...editingProfile, whatsapp: e.target.value})} />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Email</label>
+                        <label className="text-sm font-medium">Email Address</label>
                         <Input value={editingProfile.email || ''} onChange={e => setEditingProfile({...editingProfile, email: e.target.value})} />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Markets (comma separated)</label>
+                        <label className="text-sm font-medium">Active Markets</label>
                         <Input value={editingProfile.operatingMarkets || ''} onChange={e => setEditingProfile({...editingProfile, operatingMarkets: e.target.value})} />
                       </div>
                     </div>
-                    <Button onClick={handleSaveProfile} className="w-full gap-2">
-                      <Save className="w-4 h-4" /> Save Profile Changes
+                    <Button onClick={handleSaveProfile} className="w-full h-12 gap-2 text-lg font-bold">
+                      <Save className="w-5 h-5" /> Sync Profile to Site
                     </Button>
                   </>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    {profileLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Click "Init Setup" above to start.'}
+                    {profileLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Database connection pending. Use "Init Setup" if first time.'}
                   </div>
                 )}
               </CardContent>
@@ -326,43 +343,49 @@ export default function DashboardPage() {
           <TabsContent value="projects">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Performance Case Studies</h2>
-                <Button onClick={handleAddProject} className="gap-2"><Plus className="w-4 h-4" /> Add Case Study</Button>
+                <h2 className="text-2xl font-bold">Case Study Management</h2>
+                <Button onClick={handleAddProject} className="gap-2"><Plus className="w-4 h-4" /> Add New Project</Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {projects?.map((p: any) => (
-                  <Card key={p.id} className="glass border-white/5 shadow-xl">
+                  <Card key={p.id} className="glass border-white/5 shadow-xl hover:border-primary/20 transition-all">
                     <CardContent className="p-6 space-y-4">
-                      <Input 
-                        value={p.title || ''} 
-                        placeholder="Project Title"
-                        onChange={(e) => handleUpdateProjectField(p.id, { title: e.target.value })} 
-                        className="font-bold text-lg" 
-                      />
+                      <div className="flex justify-between items-start gap-4">
+                        <Input 
+                          value={p.title || ''} 
+                          placeholder="Project Title"
+                          onChange={(e) => handleUpdateProjectField(p.id, { title: e.target.value })} 
+                          className="font-bold text-lg bg-background/50" 
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteProject(p.id)} className="text-muted-foreground hover:text-destructive shrink-0">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                       <Textarea 
                         value={p.description || ''} 
-                        placeholder="Describe the strategy and outcome..."
+                        placeholder="Describe the strategy and ROI outcome..."
                         onChange={(e) => handleUpdateProjectField(p.id, { description: e.target.value })} 
-                        className="text-sm min-h-[80px]"
+                        className="text-sm min-h-[100px] bg-background/50"
                       />
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase text-muted-foreground">ROAS</label>
-                          <Input value={p.roas || ''} onChange={(e) => handleUpdateProjectField(p.id, { roas: e.target.value })} />
+                          <label className="text-[10px] uppercase text-muted-foreground font-bold tracking-widest">Target ROAS</label>
+                          <Input value={p.roas || ''} placeholder="4.5x" onChange={(e) => handleUpdateProjectField(p.id, { roas: e.target.value })} className="bg-background/50" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase text-muted-foreground">CAC Reduction</label>
-                          <Input value={p.cacReduction || ''} onChange={(e) => handleUpdateProjectField(p.id, { cacReduction: e.target.value })} />
+                          <label className="text-[10px] uppercase text-muted-foreground font-bold tracking-widest">CAC Improvement</label>
+                          <Input value={p.cacReduction || ''} placeholder="20%" onChange={(e) => handleUpdateProjectField(p.id, { cacReduction: e.target.value })} className="bg-background/50" />
                         </div>
                       </div>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(p.id)} className="w-full gap-2">
-                        <Trash2 className="w-4 h-4" /> Remove Project
-                      </Button>
+                      <div className="space-y-1">
+                         <label className="text-[10px] uppercase text-muted-foreground font-bold tracking-widest">Display Order</label>
+                         <Input type="number" value={p.order || 0} onChange={(e) => handleUpdateProjectField(p.id, { order: parseInt(e.target.value) || 0 })} className="bg-background/50" />
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
                 {(!projects || projects.length === 0) && !projectsLoading && (
-                   <p className="text-muted-foreground text-center col-span-2 py-12 border border-dashed rounded-lg">No projects added yet.</p>
+                   <p className="text-muted-foreground text-center col-span-2 py-12 border border-dashed rounded-lg">Your portfolio is empty. Add a case study to display it on the homepage.</p>
                 )}
               </div>
             </div>
