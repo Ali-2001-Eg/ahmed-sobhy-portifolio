@@ -4,15 +4,13 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Linkedin, Mail, Calendar } from "lucide-react";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
 
 export function Hero({ profile }: { profile: any }) {
-  const headshot = PlaceHolderImages.find((img) => img.id === "hero-headshot");
-
   const name = profile?.name || "Ahmed Sobhy";
   const title = profile?.title || "Senior Media Buyer";
   const bio = profile?.bio || "I build and operate performance marketing systems that scale e-commerce revenue — not campaigns that run, but engines that compound.";
+  const heroImage = profile?.heroImageUrl || "https://picsum.photos/seed/ahmed/600/600";
 
   return (
     <section id="home" className="relative hero-gradient pt-32 pb-20 px-6 md:px-12 lg:px-24 overflow-hidden">
@@ -44,7 +42,7 @@ export function Hero({ profile }: { profile: any }) {
         <div className="flex-1 relative animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="relative z-10 w-full aspect-square max-w-[500px] rounded-3xl overflow-hidden border-4 border-white/5 shadow-2xl">
             <Image
-              src={headshot?.imageUrl || ""}
+              src={heroImage}
               alt={`${name} - ${title}`}
               width={600}
               height={600}

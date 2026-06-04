@@ -13,7 +13,8 @@
         "phone": { "type": "string" },
         "whatsapp": { "type": "string" },
         "linkedin": { "type": "string" },
-        "operatingMarkets": { "type": "string" }
+        "operatingMarkets": { "type": "string" },
+        "heroImageUrl": { "type": "string" }
       },
       "required": ["name", "title", "bio"]
     },
@@ -28,6 +29,7 @@
         "roas": { "type": "string" },
         "cacReduction": { "type": "string" },
         "imageUrl": { "type": "string" },
+        "gallery": { "type": "array", "items": { "type": "string" } },
         "order": { "type": "number" }
       },
       "required": ["title", "description"]
@@ -39,12 +41,14 @@
       "properties": {
         "name": { "type": "string" },
         "brand": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
         "markets": { "type": "string" },
         "monthlySpend": { "type": "string" },
         "goals": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "brand", "monthlySpend"]
+      "required": ["name", "brand", "email", "monthlySpend"]
     }
   },
   "auth": {

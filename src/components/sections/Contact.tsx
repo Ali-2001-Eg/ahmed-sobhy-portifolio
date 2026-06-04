@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -10,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Linkedin, Calendar, TrendingUp, Loader2, Sparkles } from "lucide-react";
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export function Contact() {
   const db = useFirestore();
@@ -19,6 +20,8 @@ export function Contact() {
   const [form, setForm] = useState({
     name: '',
     brand: '',
+    email: '',
+    phone: '',
     markets: '',
     monthlySpend: '',
     goals: ''
@@ -35,40 +38,29 @@ export function Contact() {
       createdAt: serverTimestamp()
     };
 
-    // Initiate write without await for immediate UI response
     addDoc(leadsCollection, leadData)
-      .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: leadsCollection.path,
-          operation: 'create',
-          requestResourceData: leadData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
+      .catch(async () => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: leadsCollection.path, operation: 'create', requestResourceData: leadData }));
       });
 
-    // Provide immediate optimistic feedback
     toast({
       title: "Strategy Request Sent",
-      description: "Ahmed has been notified. Check your dashboard if you are admin.",
+      description: "Ahmed has been notified. We will get back to you soon.",
     });
     
-    // Clear form and loading state immediately
-    setForm({ name: '', brand: '', markets: '', monthlySpend: '', goals: '' });
+    setForm({ name: '', brand: '', email: '', phone: '', markets: '', monthlySpend: '', goals: '' });
     setLoading(false);
   };
 
   return (
     <section id="contact" className="section-padding relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 blur-3xl rounded-full -ml-32 -mb-32" />
-      
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-12">
             <div className="space-y-4">
               <Badge text="Scale Your Business" />
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">Deploy Capital with <span className="text-primary">Confidence</span></h2>
-              <p className="text-muted-foreground text-lg max-w-md">
+              <p className="text-muted-foreground text-lg">
                 Ready to stop testing and start scaling? Let&apos;s build your market expansion plan and optimize your unit economics.
               </p>
             </div>
@@ -105,62 +97,41 @@ export function Contact() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Your Name</label>
-                    <Input 
-                      required
-                      value={form.name}
-                      onChange={e => setForm({...form, name: e.target.value})}
-                      placeholder="John Smith" 
-                      className="bg-background/50 border-white/10 h-12" 
-                    />
+                    <Input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="John Smith" className="bg-background/50 border-white/10 h-12" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Brand Name</label>
-                    <Input 
-                      required
-                      value={form.brand}
-                      onChange={e => setForm({...form, brand: e.target.value})}
-                      placeholder="E-comm Store" 
-                      className="bg-background/50 border-white/10 h-12" 
-                    />
+                    <Input required value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} placeholder="E-comm Store" className="bg-background/50 border-white/10 h-12" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address (Required)</label>
+                    <Input type="email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="john@example.com" className="bg-background/50 border-white/10 h-12" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</label>
+                    <Input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+20..." className="bg-background/50 border-white/10 h-12" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Markets</label>
-                    <Input 
-                      value={form.markets}
-                      onChange={e => setForm({...form, markets: e.target.value})}
-                      placeholder="e.g. UAE, Saudi" 
-                      className="bg-background/50 border-white/10 h-12" 
-                    />
+                    <Input value={form.markets} onChange={e => setForm({...form, markets: e.target.value})} placeholder="e.g. UAE, Saudi" className="bg-background/50 border-white/10 h-12" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Monthly Spend</label>
-                    <Input 
-                      required
-                      value={form.monthlySpend}
-                      onChange={e => setForm({...form, monthlySpend: e.target.value})}
-                      placeholder="$5k - $50k" 
-                      className="bg-background/50 border-white/10 h-12" 
-                    />
+                    <Input required value={form.monthlySpend} onChange={e => setForm({...form, monthlySpend: e.target.value})} placeholder="$5k - $50k" className="bg-background/50 border-white/10 h-12" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">What are your scaling goals?</label>
-                  <Textarea 
-                    value={form.goals}
-                    onChange={e => setForm({...form, goals: e.target.value})}
-                    placeholder="Scale to $10k/day with 3x ROAS..." 
-                    className="bg-background/50 border-white/10 min-h-[100px]" 
-                  />
+                  <Textarea value={form.goals} onChange={e => setForm({...form, goals: e.target.value})} placeholder="Scale to $10k/day with 3x ROAS..." className="bg-background/50 border-white/10 min-h-[100px]" />
                 </div>
                 <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold shadow-lg shadow-primary/20 gap-2" disabled={loading}>
                   {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                   Request Performance Strategy
                 </Button>
-                <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-bold">
-                  Guaranteed Response within 24 Hours
-                </p>
               </form>
             </CardContent>
           </Card>
