@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import {IMAGE_HOSTS} from './src/lib/image-hosts';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -9,26 +10,14 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+    // Derived from src/lib/image-hosts.ts so the dashboard's URL validation and
+    // the actual allowlist can never drift apart.
+    remotePatterns: IMAGE_HOSTS.map((hostname) => ({
+      protocol: 'https' as const,
+      hostname,
+      port: '',
+      pathname: '/**',
+    })),
   },
 };
 

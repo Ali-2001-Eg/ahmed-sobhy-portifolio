@@ -7,6 +7,7 @@ import { useAuth, useUser, useFirestore, useCollection, useDoc, useMemoFirebase 
 import { doc, setDoc, updateDoc, collection, addDoc, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ImageUrlField } from '@/components/dashboard/ImageUrlField';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -251,10 +252,10 @@ export default function DashboardPage() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Hero Image URL</label>
-                      <div className="flex gap-2">
-                        <Input value={editingProfile.heroImageUrl || ''} onChange={e => setEditingProfile({...editingProfile, heroImageUrl: e.target.value})} placeholder="https://..." />
-                        {editingProfile.heroImageUrl && <ImageIcon className="text-primary" />}
-                      </div>
+                      <ImageUrlField
+                        value={editingProfile.heroImageUrl || ''}
+                        onChange={(v) => setEditingProfile({...editingProfile, heroImageUrl: v})}
+                      />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -320,7 +321,10 @@ export default function DashboardPage() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Main Preview Image URL</label>
-                        <Input value={p.imageUrl || ''} onChange={(e) => handleUpdateProjectField(p.id, { imageUrl: e.target.value })} className="bg-background/50" />
+                        <ImageUrlField
+                          value={p.imageUrl || ''}
+                          onChange={(v) => handleUpdateProjectField(p.id, { imageUrl: v })}
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Gallery Images (Multiple)</label>
