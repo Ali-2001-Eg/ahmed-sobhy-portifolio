@@ -256,6 +256,39 @@ export default function DashboardPage() {
                         {editingProfile.heroImageUrl && <ImageIcon className="text-primary" />}
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">LinkedIn URL</label>
+                        <Input
+                          type="url"
+                          inputMode="url"
+                          value={editingProfile.linkedin || ''}
+                          onChange={e => setEditingProfile({...editingProfile, linkedin: e.target.value})}
+                          placeholder="https://linkedin.com/in/..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Email</label>
+                        <Input
+                          type="email"
+                          inputMode="email"
+                          value={editingProfile.email || ''}
+                          onChange={e => setEditingProfile({...editingProfile, email: e.target.value})}
+                          placeholder="you@domain.com"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Operating Markets</label>
+                      <Input
+                        value={editingProfile.operatingMarkets || ''}
+                        onChange={e => setEditingProfile({...editingProfile, operatingMarkets: e.target.value})}
+                        placeholder="Egypt, UAE, GCC"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Comma separated. Shown in the hero and the About section.
+                      </p>
+                    </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Bio</label>
                       <Textarea value={editingProfile.bio || ''} onChange={e => setEditingProfile({...editingProfile, bio: e.target.value})} />

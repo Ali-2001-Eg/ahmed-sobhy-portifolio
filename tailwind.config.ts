@@ -12,6 +12,7 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
+        display: ['"Instrument Serif"', 'Georgia', 'serif'],
         code: ['monospace'],
       },
       colors: {

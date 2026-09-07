@@ -1,59 +1,93 @@
-
 'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { BarChart3, Target, TrendingUp, Globe, ShoppingBag, LayoutDashboard } from "lucide-react";
+import * as React from 'react';
+import {
+  AboutPhysicsContainer,
+  aboutTags,
+  type AboutTag,
+} from '@/components/physics/AboutPhysicsContainer';
+import { FallingPhysicsContainer, type PhysicsItem } from '@/components/physics/FallingPhysicsContainer';
+
+const PRIMARY = 'hsl(var(--primary))';
+const SECONDARY = 'hsl(var(--secondary))';
+
+const SKILLS: PhysicsItem[] = [
+  { id: 'meta', label: 'Meta Ads', color: PRIMARY },
+  { id: 'google', label: 'Google Ads', color: SECONDARY },
+  { id: 'tiktok', label: 'TikTok Ads', color: PRIMARY },
+  { id: 'snap', label: 'Snapchat Ads', color: SECONDARY },
+  { id: 'cbo', label: 'CBO / ABO Scaling', color: PRIMARY },
+  { id: 'econ', label: 'Unit Economics', color: SECONDARY },
+  { id: 'mer', label: 'MER & ROAS', color: PRIMARY },
+  { id: 'ltv', label: 'LTV / CAC', color: SECONDARY },
+  { id: 'ga4', label: 'GA4', color: PRIMARY },
+  { id: 'gtm', label: 'GTM', color: SECONDARY },
+  { id: 'sst', label: 'Server-Side Tagging', color: PRIMARY },
+  { id: 'creative', label: 'Creative Testing', color: SECONDARY },
+  { id: 'retention', label: 'Retention Strategy', color: PRIMARY },
+  { id: 'gcc', label: 'GCC Expansion', color: SECONDARY },
+  { id: 'ecom', label: 'E-comm Growth', color: PRIMARY },
+];
 
 export function About({ profile }: { profile: any }) {
-  const skills = [
-    { icon: <Target className="w-6 h-6" />, title: "Meta Ads", desc: "Scaling Facebook & IG ads via advanced CBO/ABO strategies." },
-    { icon: <TrendingUp className="w-6 h-6" />, title: "Unit Economics", desc: "Optimizing for MER, ROAS, and sustainable LTV/CAC ratios." },
-    { icon: <BarChart3 className="w-6 h-6" />, title: "Data Precision", desc: "Advanced tracking via GTM, GA4, and server-side tagging." },
-    { icon: <Globe className="w-6 h-6" />, title: "Market Expansion", desc: "Proven results in Egypt, UAE, and GCC markets." },
-    { icon: <ShoppingBag className="w-6 h-6" />, title: "E-comm Growth", desc: "Building conversion engines for luxury and retail brands." },
-    { icon: <LayoutDashboard className="w-6 h-6" />, title: "Media Planning", desc: "Capital deployment across Google, TikTok, and Snap." },
-  ];
+  const markets: string[] = profile?.operatingMarkets?.split(',') || ['Egypt', 'UAE', 'GCC'];
 
-  const markets = profile?.operatingMarkets?.split(',') || ["Egypt", "UAE", "GCC"];
+  // Build the About tags from the live profile where we have it, falling back to
+  // the component's own sample data for anything the dashboard hasn't filled in.
+  const tags = React.useMemo<AboutTag[]>(() => {
+    const overrides: Record<string, Partial<AboutTag>> = {
+      role: { label: profile?.title || 'Senior Media Buyer' },
+      experience: profile?.yearsExperience
+        ? { label: `${profile.yearsExperience}+ Years` }
+        : {},
+      spend: profile?.managedSpend ? { label: `${profile.managedSpend} Managed` } : {},
+      location: profile?.location ? { label: profile.location } : {},
+      markets: { label: markets.map((m) => m.trim()).join(' · ') },
+    };
+    return aboutTags.map((tag) => ({ ...tag, ...(overrides[tag.id] ?? {}) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.title, profile?.yearsExperience, profile?.managedSpend, profile?.location, profile?.operatingMarkets]);
 
   return (
     <section id="about" className="section-padding bg-card/30">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-20">
         <div className="flex flex-col lg:flex-row gap-16 items-start">
           <div className="lg:w-1/2 space-y-6">
             <h2 className="text-4xl font-bold">Performance Expertise</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              I specialize in expanding businesses into markets that matter. {markets.slice(0, 3).join('. ')}. 
-              With focus on real spend and real outcomes, I manage high-budget campaigns 
-              that don&apos;t just run—they scale.
+              I specialize in expanding businesses into markets that matter.{' '}
+              {markets.slice(0, 3).join('. ')}. With focus on real spend and real outcomes, I
+              manage high-budget campaigns that don&apos;t just run—they scale.
             </p>
             <p className="text-muted-foreground">
-              My methodology revolves around treating ad spend as investment capital. 
-              By focusing on unit economics and market-specific consumer behavior, 
-              I transform volatile marketing efforts into predictable revenue engines.
+              My methodology revolves around treating ad spend as investment capital. By focusing
+              on unit economics and market-specific consumer behavior, I transform volatile
+              marketing efforts into predictable revenue engines.
             </p>
-            <div className="pt-4 flex flex-wrap gap-2">
-              {["Meta Ads", "Google Ads", "TikTok Ads", "Unit Economics", "Retention Strategy", "Scaling GCC"].map((tag) => (
-                <Badge key={tag} variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-none">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground/70 pt-2">
+              Grab any tag and throw it around — everything here is live physics.
+            </p>
           </div>
-          <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {skills.map((skill, idx) => (
-              <Card key={idx} className="glass hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1">
-                <CardContent className="p-6 space-y-3">
-                  <div className="p-2 w-fit rounded-lg bg-primary/10 text-primary">
-                    {skill.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold">{skill.title}</h3>
-                  <p className="text-sm text-muted-foreground">{skill.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
+
+          <div className="lg:w-1/2 w-full">
+            <AboutPhysicsContainer tags={tags} height={560} />
           </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h3 className="text-3xl font-bold">The Toolkit</h3>
+            <p className="text-muted-foreground max-w-lg">
+              Platforms, measurement, and growth levers I work with day to day.
+            </p>
+          </div>
+          <FallingPhysicsContainer
+            items={SKILLS}
+            variant="tag"
+            height={420}
+            itemsPerSpawnRow={5}
+            className="bg-background/40 border border-white/5"
+          />
         </div>
       </div>
     </section>
